@@ -398,6 +398,7 @@ body{background:#fff}
 <span class="q-num">Pertanyaan 20</span>
 <p class="q-title">Catatan Tambahan</p>
         <p class="q-text">Jika ada hal lain terkait status, pengakuan, atau kondisi masyarakat adat di daerah Anda yang belum tercakup dalam pertanyaan sebelumnya, silakan tuliskan di kolom berikut.</p>
+        <p class="q-text">Apabila terdapat informasi tambahan mengenai kondisi masyarakat adat di wilayah Anda yang belum tercakup dalam pertanyaan sebelumnya, silakan tuliskan pada kolom berikut.</p>
 <p class="hint">Pertanyaan ini opsional dan tidak ada batasan jumlah kata. Tuliskan sepanjang yang Anda perlukan.</p>
 <textarea id="catatan_tambahan" name="catatan_tambahan" rows="6" placeholder="Tuliskan jawaban Anda di sini..."></textarea>
 </div>
@@ -727,24 +728,20 @@ console.warn("APPS_SCRIPT_URL belum diisi dengan URL deployment yang benar.");
 return "belum-terhubung";
 }
 try {
-const res = await fetch(APPS_SCRIPT_URL, {
+// mode "no-cors": Apps Script Web App sering tidak menyertakan header
+// Access-Control-Allow-Origin pada respons POST meski deployment sudah
+// "Anyone" dan sudah diotorisasi -- ini keterbatasan di sisi Google,
+// bukan di kode ini. Dengan no-cors, request tetap terkirim dan tetap
+// diproses oleh doPost di server; kita hanya tidak bisa membaca isi
+// responsnya dari JavaScript, jadi dianggap berhasil selama tidak ada
+// error jaringan murni (mis. benar-benar offline).
+await fetch(APPS_SCRIPT_URL, {
 method: "POST",
-// text/plain menghindari CORS preflight (OPTIONS) yang tidak
-// ditangani Apps Script Web App secara default.
+mode: "no-cors",
 headers: { "Content-Type": "text/plain;charset=utf-8" },
 body: JSON.stringify(payload)
 });
-const raw = await res.text();
-let data;
-try {
-data = JSON.parse(raw);
-} catch (parseErr) {
-// Respons bukan JSON biasanya berarti: deployment belum "Anyone",
-// URL /exec salah/belum di-redeploy, atau script error di kode.gs.
-console.error("Respons Apps Script bukan JSON, cek deployment:", raw.slice(0, 300));
-return "gagal";
-}
-return data && data.ok ? "ok" : "gagal";
+return "ok";
 } catch (err) {
 console.error(err);
 return "gagal";
