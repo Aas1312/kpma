@@ -723,7 +723,7 @@ catatan_tambahan: text("catatan_tambahan")
 // langsung dari URL Apps Script (HtmlService). Karena halaman ini
 // dihosting di Cloudflare (domain terpisah), kita harus memanggil
 // Web App Apps Script lewat fetch() ke APPS_SCRIPT_URL, bukan google.script.run.
-if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes("AKfycbwfuz2Dsogtt34UevpDgaFy-A-0QqBYVbK3UE3-_jg")) {
+if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes("GANTI_ID_DEPLOYMENT")) {
 console.warn("APPS_SCRIPT_URL belum diisi dengan URL deployment yang benar.");
 return "belum-terhubung";
 }
@@ -735,7 +735,16 @@ method: "POST",
 headers: { "Content-Type": "text/plain;charset=utf-8" },
 body: JSON.stringify(payload)
 });
-const data = await res.json();
+const raw = await res.text();
+let data;
+try {
+data = JSON.parse(raw);
+} catch (parseErr) {
+// Respons bukan JSON biasanya berarti: deployment belum "Anyone",
+// URL /exec salah/belum di-redeploy, atau script error di kode.gs.
+console.error("Respons Apps Script bukan JSON, cek deployment:", raw.slice(0, 300));
+return "gagal";
+}
 return data && data.ok ? "ok" : "gagal";
 } catch (err) {
 console.error(err);
